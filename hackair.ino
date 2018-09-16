@@ -4,11 +4,19 @@
 #include <WiFiClientSecure.h>
 #include <Timezone.h>
 #include <Time.h>
+#include <ArduinoJson.h>
+
+#define FILE_HACKAIR "/hackair.json"
+
+uint16_t sensorid = 726;
 
 void setup() {
   //Initialize the Kniwwelino Board
+  Kniwwelino.setSilent();
   Kniwwelino.begin("Hackair", true, true, false); // Wifi=true, Fastboot=true, MQTT logging false
   Kniwwelino.MATRIXsetScrollSpeed(3);
+  Kniwwelino.MATRIXsetBrightness(MATRIX_DEFAULT_BRIGHTNESS);
+  Kniwwelino.RGBsetBrightness(50);
   Serial.println("RED");
   Kniwwelino.RGBsetColor(255, 0, 0);
   delay(300);
@@ -21,7 +29,16 @@ void setup() {
   Kniwwelino.RGBclear();
   if (!Kniwwelino.isConnected()) {
     Kniwwelino.RGBsetColorEffect("FF0000", RGB_FLASH , -1);
-  }    
+  }
+  String confJSON = Kniwwelino.FILEread(FILE_HACKAIR);
+  if (confJSON.length() > 5) {
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject& json = jsonBuffer.parseObject(confJSON);    
+    if (json.success()) {
+      if (json.containsKey("sensorid"))
+        sensorid = json["sensorid"];
+    }
+  }  
 }
 
 // unfortunatly timeZone from Kniwwelino not public, cf. https://github.com/LIST-LUXEMBOURG/KniwwelinoLib/issues/3
@@ -36,7 +53,6 @@ String valuePM10;
 String indexPM25;
 String indexPM10;
 time_t measTime = 0;
-uint16_t sensorid = 726;
 
 time_t readtime(String line) {
   tmElements_t tm;
@@ -227,6 +243,12 @@ void loop() {
             sensorid = newID.toInt();
             lastTry = 0;
             measTime = 0;
+            DynamicJsonBuffer jsonBuffer;
+            JsonObject& json = jsonBuffer.createObject();
+            json["sensorid"] = sensorid;
+            String confJSON;
+            json.printTo(confJSON);
+            Kniwwelino.FILEwrite(FILE_HACKAIR, confJSON);
           }
           Serial.println(sensorid);
           Kniwwelino.MATRIXwriteOnce(String(sensorid));
