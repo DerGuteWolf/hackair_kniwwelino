@@ -29,14 +29,14 @@ TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120};     //Central European S
 TimeChangeRule CET = {"CET", Last, Sun, Oct, 3, 60};       //Central European Standard Time
 Timezone timeZone = Timezone(CEST, CET);
 
-String dummy; // get's overwritten with garbage
+String dummy; // get's overwritten with garbage, why?
 String valuePM25;
 String valuePM10;
 // possible index values: "very good" "good" "medium"? "bad"?
 String indexPM25;
 String indexPM10;
-time_t measTime;
-uint16_t sensorid = 727;
+time_t measTime = 0;
+uint16_t sensorid = 726;
 
 time_t readtime(String line) {
   tmElements_t tm;
@@ -61,7 +61,7 @@ void fetchReadings(uint16_t sensorid) {
     if (Kniwwelino.isConnected()) {
       WiFiClientSecure client;
       const char* host = "api.hackair.eu";
-      const char* fingerprint = "88 BC EF 73 41 F3 36 77 DF C7 6E 79 E1 22 94 18 56 CF C1 B0";
+      const char* fingerprint = "E9 E4 38 EE CB C8 5B FF CB EA E1 75 B3 67 11 9F 31 28 A7 1C";
       if (client.connect(host, 443)) {
 
         // could and should better check CA as in https://github.com/espressif/arduino-esp32/blob/master/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino        
@@ -108,7 +108,14 @@ void fetchReadings(uint16_t sensorid) {
               
               const char namePM25I[] = "PM2.5_AirPollutantIndex";
               pos = line.indexOf(namePM25I) + sizeof(namePM25I);
-              indexPM25 = line.substring(pos+1, line.indexOf(",", pos)-1);
+              indexPM25 = line.substring(pos, line.indexOf(",", pos));
+              // index does not always have quotes, exemplary result:
+              //726,sensors_arduino,"2018-09-15 07:17:00",PM2.5_AirPollutantValue,17.96,"micrograms/cubic meter",PM2.5_AirPollutantIndex,good,"48.186890411259,11.365576386452"
+              //726,sensors_arduino,"2018-09-15 07:17:00",PM10_AirPollutantValue,18.83,"micrograms/cubic meter",PM10_AirPollutantIndex,"very good","48.186890411259,11.365576386452"
+              if (indexPM25.startsWith("\""))
+                indexPM25 = indexPM25.substring(1);
+              if (indexPM25.endsWith("\""))
+                indexPM25 = indexPM25.substring(0, indexPM25.length()-1);
 
               line = client.readStringUntil('\n');
               Serial.println(line);
@@ -121,7 +128,11 @@ void fetchReadings(uint16_t sensorid) {
 
               const char namePM10I[] = "PM10_AirPollutantIndex";
               pos = line.indexOf(namePM10I) + sizeof(namePM10I);
-              indexPM10 = line.substring(pos+1, line.indexOf(",", pos)-1);
+              indexPM10 = line.substring(pos, line.indexOf(",", pos));
+              if (indexPM10.startsWith("\""))
+                indexPM10 = indexPM10.substring(1);
+              if (indexPM10.endsWith("\""))
+                indexPM10 = indexPM10.substring(0, indexPM10.length()-1);
 
               measTime = _min(t25, t10);
 
@@ -154,7 +165,10 @@ void fetchReadings(uint16_t sensorid) {
   }  
 }
 
-time_t lastTry;
+time_t lastTry = 0;
+boolean setupMode = false;
+String newID;
+byte currentDigit;
 
 void loop() {
   if (now()-lastTry > 30) {
@@ -179,14 +193,51 @@ void loop() {
     Serial.println("A Clicked");
     if (Kniwwelino.BUTTONBdown()) {
       Serial.println("B Button down");
+      setupMode = !setupMode;
+      if (setupMode) {
+        currentDigit = 11;
+        newID = "";
+      }
     }
-    Serial.println(valuePM25);
-    Kniwwelino.MATRIXwriteOnce(valuePM25);
+    if (!setupMode) {
+      Serial.println(valuePM25);
+      Kniwwelino.MATRIXwriteOnce(valuePM25);
+    } else {
+      if (currentDigit == 10)
+        currentDigit = 0;
+      else
+        currentDigit++;
+      if (currentDigit > 9)
+        Kniwwelino.MATRIXwrite("F");
+      else
+        Kniwwelino.MATRIXwrite(String(currentDigit));
+    }
   }  
   if (Kniwwelino.BUTTONBclicked()) {    
     Serial.println("B Clicked");
-    Serial.println(valuePM10);
-    Kniwwelino.MATRIXwriteOnce(valuePM10);
+    if (!setupMode) {
+      Serial.println(valuePM10);
+      Kniwwelino.MATRIXwriteOnce(valuePM10);
+    } else {
+      if (currentDigit > 11)
+        currentDigit = 10;
+      else
+        if (currentDigit == 10) {
+          if (newID.length() > 0) {
+            sensorid = newID.toInt();
+            Serial.println(sensorid);
+            Kniwwelino.MATRIXwriteOnce(String(sensorid));
+            lastTry = 0;
+            measTime = 0;
+          }
+          setupMode = false;
+        } else {
+          newID += String(currentDigit);
+          currentDigit = 10;
+          Kniwwelino.MATRIXwrite("F");
+          Serial.println(newID);
+        }       
+    }
   }
   
   Kniwwelino.loop();
