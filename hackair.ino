@@ -225,11 +225,11 @@ void loop() {
         if (currentDigit == 10) {
           if (newID.length() > 0) {
             sensorid = newID.toInt();
-            Serial.println(sensorid);
-            Kniwwelino.MATRIXwriteOnce(String(sensorid));
             lastTry = 0;
             measTime = 0;
           }
+          Serial.println(sensorid);
+          Kniwwelino.MATRIXwriteOnce(String(sensorid));
           setupMode = false;
         } else {
           newID += String(currentDigit);
