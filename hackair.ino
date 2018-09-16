@@ -216,8 +216,10 @@ void loop() {
       }
     }
     if (!setupMode) {
-      Serial.println(valuePM25);
-      Kniwwelino.MATRIXwriteOnce(valuePM25);
+      if (measTime > 0) {
+        Serial.println(valuePM25);
+        Kniwwelino.MATRIXwriteOnce(valuePM25);
+      }
     } else {
       if (currentDigit == 10)
         currentDigit = 0;
@@ -232,8 +234,10 @@ void loop() {
   if (Kniwwelino.BUTTONBclicked()) {    
     Serial.println("B Clicked");
     if (!setupMode) {
-      Serial.println(valuePM10);
-      Kniwwelino.MATRIXwriteOnce(valuePM10);
+      if (measTime > 0) {
+        Serial.println(valuePM10);
+        Kniwwelino.MATRIXwriteOnce(valuePM10);
+      }
     } else {
       if (currentDigit > 11)
         currentDigit = 10;
