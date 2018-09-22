@@ -80,7 +80,7 @@ void fetchReadings(uint16_t sensorid) {
       const char* fingerprint = "E9 E4 38 EE CB C8 5B FF CB EA E1 75 B3 67 11 9F 31 28 A7 1C";
       if (client.connect(host, 443)) {
 
-        // could and should better check CA as in https://github.com/espressif/arduino-esp32/blob/master/libraries/WiFiClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino        
+        // could and should better check CA as in https://github.com/esp8266/Arduino/blob/2.4.0/libraries/ESP8266WiFi/examples/HTTPSRequestCACert/HTTPSRequestCACert.ino
         if (client.verify(fingerprint, host)) {
           char request[100];
           time_t t = timeZone.toUTC(now());        
