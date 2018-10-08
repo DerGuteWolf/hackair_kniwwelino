@@ -49,7 +49,7 @@ Timezone timeZone = Timezone(CEST, CET);
 String dummy; // get's overwritten with garbage, why?
 String valuePM25;
 String valuePM10;
-// possible index values: "very good" "good" "medium"? "bad"?
+// possible index values: "very good" "good" "medium"? "bad"
 String indexPM25;
 String indexPM10;
 time_t measTime = 0;
