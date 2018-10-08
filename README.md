@@ -6,6 +6,6 @@ Lastest value from the hackair database (search for a nearby hackair home sensor
 You can change the sensorid used by pressing button B and keep it pressed and clicking on button A. Relese button B then. You have then entered setup mode and "F" ist displayed. When you immediatly click button B now, the currently used sensorid is shown once and setup mode is left.
 Via clicking button A you can go from 0 to 9 and F. When clicking button B either the current digit is added to the new sensorid and setup continues with the next digit or when "F" is shown the so far entered digits are used as the new sensorid which is shown once, saved, used and setup mode is left.
 
-Version 1.0: Working version with CA Cert validation, could not test RGB led setting for medium and bad so far
+Version 1.0: Working version with CA Cert validation, could not test RGB led setting for medium so far
 
 For installation follow instructions from https://github.com/LIST-LUXEMBOURG/KniwwelinoLib (esp. don't use the 2.3.2 board package from the board manager url http://doku.kniwwelino.lu/_media/en/download/package_esp8266_kniwwelino_index.json as instructed on https://doku.kniwwelino.lu/en/installationarduino since 2.3.2 is too old for SSL CA validation as used here; but the other hints on the latter page for using ArduinoIDE are valid and helpful). 
